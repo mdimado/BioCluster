@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, TrendingUp, Database, FileDown, Filter, ChevronRight, Clock, Layers, ZoomIn, ZoomOut, Upload, Play, CheckCircle, Loader } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
+import { 
+AlertTriangle, 
+  BarChart3 
+} from 'lucide-react';
 
 const BiodiversityDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -252,273 +256,389 @@ const calculateDiversityIndex = (sampleId) => {
     ? samples 
     : samples.filter(s => s.siteId === parseInt(filters.site));
 
-  const OverviewTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="text-gray-400 text-sm mb-2">Total Reads</div>
-          <div className="text-3xl font-bold text-white">334,880</div>
-          <div className="text-emerald-400 text-xs mt-2">+12.5% vs last month</div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="text-gray-400 text-sm mb-2">Confident Taxa</div>
-          <div className="text-3xl font-bold text-white">493</div>
-          <div className="text-blue-400 text-xs mt-2">89% confidence avg</div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="text-gray-400 text-sm mb-2">Ambiguous Taxa</div>
-          <div className="text-3xl font-bold text-white">87</div>
-          <div className="text-amber-400 text-xs mt-2">Requires review</div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="text-gray-400 text-sm mb-2">Diversity Index</div>
-          <div className="text-3xl font-bold text-white">3.47</div>
-          <div className="text-purple-400 text-xs mt-2">Shannon index</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Sample Collection Sites</h3>
-            <MapPin className="w-5 h-5 text-gray-400" />
-          </div>
-          
-          <div className="relative bg-gray-900 rounded-lg h-80 overflow-hidden">
-            <ComposableMap
-              projection="geoMercator"
-              projectionConfig={{
-                center: [70, -10],
-                scale: 200
-              }}
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
-            >
-              <ZoomableGroup
-                zoom={mapPosition.zoom}
-                center={mapPosition.coordinates}
-                onMoveEnd={handleMoveEnd}
-              >
-                <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
-                  {({ geographies }) =>
-                    geographies.map((geo) => (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill="#1e3a5f"
-                        stroke="#0f172a"
-                        strokeWidth={0.5}
-                        style={{
-                          default: { outline: 'none' },
-                          hover: { outline: 'none', fill: '#2d5a8f' },
-                          pressed: { outline: 'none' },
-                        }}
-                      />
-                    ))
-                  }
-                </Geographies>
-                
-                {sites.map(site => (
-                  <Marker
-                    key={site.id}
-                    coordinates={[site.lng, site.lat]}
-                    onClick={() => setSelectedSite(site)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <g>
-                      <circle
-                        r={8 / mapPosition.zoom}
-                        fill="#10b981"
-                        stroke="#fff"
-                        strokeWidth={2 / mapPosition.zoom}
-                        className="animate-pulse"
-                      />
-                      <circle
-                        r={12 / mapPosition.zoom}
-                        fill="#10b981"
-                        opacity={0.3}
-                      />
-                    </g>
-                  </Marker>
-                ))}
-              </ZoomableGroup>
-            </ComposableMap>
-
-            {/* Zoom Controls */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2">
-              <button
-                onClick={handleZoomIn}
-                className="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg border border-gray-600 transition-colors"
-              >
-                <ZoomIn className="w-4 h-4 text-white" />
-              </button>
-              <button
-                onClick={handleZoomOut}
-                className="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg border border-gray-600 transition-colors"
-              >
-                <ZoomOut className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          </div>
-          
-          {selectedSite && (
-            <div className="mt-4 bg-gray-700 rounded-lg p-4 border border-gray-600">
-              <div className="text-sm font-semibold text-white">{selectedSite.name}</div>
-              <div className="text-xs text-gray-400 mt-1">{selectedSite.description}</div>
-              <div className="flex items-center gap-4 mt-2 text-xs">
-                <span className="text-emerald-400">Reads: {selectedSite.reads.toLocaleString()}</span>
-                <span className="text-blue-400">Taxa: {selectedSite.taxa}</span>
-                <span className="text-gray-500">Lat: {selectedSite.lat}°, Lng: {selectedSite.lng}°</span>
-              </div>
-            </div>
-          )}
-          
-          <div className="mt-4 space-y-2">
-            {sites.map(site => (
-              <div
-                key={site.id}
-                className="flex items-center justify-between p-2 rounded hover:bg-gray-700 cursor-pointer transition-colors"
-                onClick={() => {
-                  setSelectedSite(site);
-                  setMapPosition({ coordinates: [site.lng, site.lat], zoom: 2 });
-                }}
-              >
+    const OverviewTab = () => {
+      // State for filters
+      const [selectedRegion, setSelectedRegion] = useState('all');
+      const [viewMode, setViewMode] = useState('confident'); // 'confident' or 'full-probability'
+      
+      return (
+        <div className="space-y-6">
+          {/* Filters & Controls Section */}
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                  <span className="text-sm text-gray-300">{site.name}</span>
-                  <span className="text-xs text-gray-500">({site.description})</span>
+                  <Filter className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-300">Filters:</span>
                 </div>
-                <span className="text-xs text-gray-500">{site.taxa} taxa</span>
+                
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
+                  className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="all">All Sites</option>
+                  <option value="tropical">Tropical Rainforest</option>
+                  <option value="coral">Coral Reef</option>
+                  <option value="mangrove">Mangrove Estuary</option>
+                  <option value="alpine">Alpine Lake</option>
+                </select>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Population Distribution Over Time</h3>
-            <Clock className="w-5 h-5 text-gray-400" />
-          </div>
-          
-          <div className="mb-4">
-            <input
-              type="range"
-              min="2023"
-              max="2025"
-              value={timelineYear}
-              onChange={(e) => setTimelineYear(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="flex justify-between mt-2">
-              <span className="text-xs text-gray-400">2023</span>
-              <span className="text-sm font-semibold text-emerald-400">{timelineYear}</span>
-              <span className="text-xs text-gray-400">2025</span>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-300">Native Species</span>
-                <span className="text-white font-semibold">{timelineData[timelineYear].native}</span>
-              </div>
-              <div className="bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-emerald-500 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${(timelineData[timelineYear].native / 130) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-300">Invasive Species</span>
-                <span className="text-red-400 font-semibold">{timelineData[timelineYear].invasive}</span>
-              </div>
-              <div className="bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-red-500 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${(timelineData[timelineYear].invasive / 30) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-gray-700">
-              <div className="text-sm text-gray-400 mb-2">Diversity Trend</div>
-              <div className="flex items-end gap-2 h-24">
-                {[2023, 2024, 2025].map(year => (
-                  <div key={year} className="flex-1 flex flex-col items-center">
-                    <div
-                      className={`w-full rounded-t transition-all duration-500 ${
-                        year === timelineYear ? 'bg-purple-500' : 'bg-gray-600'
-                      }`}
-                      style={{ height: `${(timelineData[year].diversity / 3.5) * 100}%` }}
-                    ></div>
-                    <span className="text-xs text-gray-500 mt-2">{year}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {timelineYear === 2025 && (
-              <div className="bg-red-900 bg-opacity-20 border border-red-800 rounded-lg p-3">
-                <div className="text-xs font-semibold text-red-400 mb-1">Alert: Invasive Species Detected</div>
-                <div className="text-xs text-gray-300">Significant increase in non-native taxa observed since 2023</div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">Taxonomic Classification Hierarchy</h3>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-400">Show Ambiguous</label>
-            <button
-              onClick={() => setShowAmbiguous(!showAmbiguous)}
-              className={`w-10 h-5 rounded-full transition-colors ${
-                showAmbiguous ? 'bg-emerald-500' : 'bg-gray-600'
-              }`}
-            >
-              <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                showAmbiguous ? 'translate-x-5' : 'translate-x-0.5'
-              }`}></div>
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {taxonomyTree.map((domain, idx) => (
-            <div key={idx} className="border border-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <Layers className="w-5 h-5 text-emerald-400" />
-                  <span className="font-semibold text-white">{domain.domain}</span>
-                  <span className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
-                    {domain.count} taxa
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {domain.phyla.map((phylum, pIdx) => (
-                  <div
-                    key={pIdx}
-                    className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg cursor-pointer transition-colors"
+    
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">View Mode:</span>
+                <div className="flex bg-gray-700 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('confident')}
+                    className={`px-4 py-1.5 text-sm rounded transition-colors ${
+                      viewMode === 'confident'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
                   >
-                    <div className="text-sm text-gray-200">{phylum}</div>
-                    <div className="text-xs text-gray-500 mt-1">Class → Order → Family</div>
-                  </div>
-                ))}
+                    Confident Only
+                  </button>
+                  <button
+                    onClick={() => setViewMode('full-probability')}
+                    className={`px-4 py-1.5 text-sm rounded transition-colors ${
+                      viewMode === 'full-probability'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    Full Probabilities
+                  </button>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+    
+          {/* Summary KPIs */}
+          <div className="grid grid-cols-4 gap-4">
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-emerald-500 transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-gray-400 text-sm">Total Reads</div>
+                <Database className="w-4 h-4 text-gray-500" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-1">334,880</div>
+              <div className="flex items-center justify-between">
+                <div className="text-emerald-400 text-xs flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  +12.5% vs last month
+                </div>
+                {/* Mini sparkline */}
+                <div className="flex items-end gap-0.5 h-6">
+                  {[40, 45, 38, 52, 48, 55, 60].map((height, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-emerald-500 rounded-t"
+                      style={{ height: `${height}%` }}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+    
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-blue-500 transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-gray-400 text-sm">Confident Taxa</div>
+                <CheckCircle className="w-4 h-4 text-blue-400" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-1">493</div>
+              <div className="flex items-center justify-between">
+                <div className="text-blue-400 text-xs">89% confidence avg</div>
+                <div className="text-xs text-gray-500 bg-blue-900 bg-opacity-30 px-2 py-0.5 rounded">
+                  {viewMode === 'confident' ? 'Active Filter' : 'Available'}
+                </div>
+              </div>
+            </div>
+    
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-amber-500 transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-gray-400 text-sm">Ambiguous Taxa</div>
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-1">87</div>
+              <div className="flex items-center justify-between">
+                <div className="text-amber-400 text-xs">Requires review</div>
+                <div className="text-xs text-gray-500">15% of total</div>
+              </div>
+            </div>
+    
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-purple-500 transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-gray-400 text-sm">Diversity Index</div>
+                <BarChart3 className="w-4 h-4 text-purple-400" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-1">3.47</div>
+              <div className="flex items-center justify-between">
+                <div className="text-purple-400 text-xs">Shannon index</div>
+                <div className="text-xs text-emerald-400">High diversity</div>
+              </div>
+            </div>
+          </div>
+    
+          {/* Main Visualizations Grid */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Geographical Map */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Sample Collection Sites</h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {selectedRegion === 'all' ? 'All regions' : sites.find(s => s.description.toLowerCase().includes(selectedRegion))?.description || 'Filtered view'}
+                  </p>
+                </div>
+                <MapPin className="w-5 h-5 text-emerald-400" />
+              </div>
+              
+              <div className="relative bg-gray-900 rounded-lg h-80 overflow-hidden">
+                <ComposableMap
+                  projection="geoMercator"
+                  projectionConfig={{
+                    center: [70, -10],
+                    scale: 200
+                  }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  <ZoomableGroup
+                    zoom={mapPosition.zoom}
+                    center={mapPosition.coordinates}
+                    onMoveEnd={handleMoveEnd}
+                  >
+                    <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
+                      {({ geographies }) =>
+                        geographies.map((geo) => (
+                          <Geography
+                            key={geo.rsmKey}
+                            geography={geo}
+                            fill="#1e3a5f"
+                            stroke="#0f172a"
+                            strokeWidth={0.5}
+                            style={{
+                              default: { outline: 'none' },
+                              hover: { outline: 'none', fill: '#2d5a8f' },
+                              pressed: { outline: 'none' },
+                            }}
+                          />
+                        ))
+                      }
+                    </Geographies>
+                    
+                    {sites
+  .filter(site => selectedRegion === 'all' || site.description.toLowerCase().includes(selectedRegion))
+  .map(site => {
+    const isSelected = selectedSite?.id === site.id;
+    return (
+      <Marker
+        key={site.id}
+        coordinates={[site.lng, site.lat]}
+        onClick={() => setSelectedSite(site)}
+        style={{ cursor: 'pointer' }}
+      >
+        <g>
+          <circle
+            r={isSelected ? 12 / mapPosition.zoom : 8 / mapPosition.zoom}
+            fill={isSelected ? "#3b82f6" : "#10b981"}
+            stroke="#fff"
+            strokeWidth={isSelected ? 3 / mapPosition.zoom : 2 / mapPosition.zoom}
+            className={isSelected ? "" : "animate-pulse"}
+          />
+          <circle
+            r={isSelected ? 18 / mapPosition.zoom : 12 / mapPosition.zoom}
+            fill={isSelected ? "#3b82f6" : "#10b981"}
+            opacity={isSelected ? 0.4 : 0.3}
+          />
+          {isSelected && (
+            <circle
+              r={24 / mapPosition.zoom}
+              fill="#3b82f6"
+              opacity={0.2}
+              className="animate-pulse"
+            />
+          )}
+        </g>
+      </Marker>
+    );
+  })}
+                  </ZoomableGroup>
+                </ComposableMap>
+    
+                <div className="absolute top-4 right-4 flex flex-col gap-2">
+                  <button
+                    onClick={handleZoomIn}
+                    className="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg border border-gray-600 transition-colors"
+                  >
+                    <ZoomIn className="w-4 h-4 text-white" />
+                  </button>
+                  <button
+                    onClick={handleZoomOut}
+                    className="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg border border-gray-600 transition-colors"
+                  >
+                    <ZoomOut className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </div>
+              
+              {selectedSite && (
+                <div className="mt-4 bg-gray-700 rounded-lg p-4 border border-gray-600">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-semibold text-white">{selectedSite.name}</div>
+                    <div className="text-xs bg-emerald-600 px-2 py-0.5 rounded text-white">
+                      Active
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400 mb-3">{selectedSite.description}</div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-gray-800 rounded p-2">
+                      <div className="text-gray-500 mb-1">Reads</div>
+                      <div className="text-emerald-400 font-semibold">{selectedSite.reads.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-gray-800 rounded p-2">
+                      <div className="text-gray-500 mb-1">Taxa</div>
+                      <div className="text-blue-400 font-semibold">{selectedSite.taxa}</div>
+                    </div>
+                    <div className="bg-gray-800 rounded p-2">
+                      <div className="text-gray-500 mb-1">Position</div>
+                      <div className="text-gray-300 font-mono text-[10px]">
+                        {selectedSite.lat.toFixed(2)}°, {selectedSite.lng.toFixed(2)}°
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
+                {sites
+                  .filter(site => selectedRegion === 'all' || site.description.toLowerCase().includes(selectedRegion))
+                  .map(site => (
+                    <div
+                      key={site.id}
+                      className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+                        selectedSite?.id === site.id
+                          ? 'bg-emerald-900 bg-opacity-30 border border-emerald-600'
+                          : 'hover:bg-gray-700'
+                      }`}
+                      onClick={() => {
+                        setSelectedSite(site);
+                        setMapPosition({ coordinates: [site.lng, site.lat], zoom: 2 });
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          selectedSite?.id === site.id ? 'bg-emerald-400' : 'bg-emerald-500'
+                        }`}></div>
+                        <span className="text-sm text-gray-300">{site.name}</span>
+                        <span className="text-xs text-gray-500">({site.description})</span>
+                      </div>
+                      <span className="text-xs text-gray-400">{site.taxa} taxa</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+    
+            {/* Population Distribution Timeline */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Population Distribution Over Time</h3>
+                  <p className="text-xs text-gray-400 mt-1">Temporal biodiversity analysis</p>
+                </div>
+                <Clock className="w-5 h-5 text-gray-400" />
+              </div>
+              
+              <div className="mb-4">
+                <input
+                  type="range"
+                  min="2023"
+                  max="2025"
+                  value={timelineYear}
+                  onChange={(e) => setTimelineYear(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between mt-2">
+                  <span className="text-xs text-gray-400">2023</span>
+                  <span className="text-sm font-semibold text-emerald-400">{timelineYear}</span>
+                  <span className="text-xs text-gray-400">2025</span>
+                </div>
+              </div>
+    
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-300">Native Species</span>
+                    <span className="text-white font-semibold">{timelineData[timelineYear].native}</span>
+                  </div>
+                  <div className="bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-emerald-500 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${(timelineData[timelineYear].native / 130) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+    
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-300">Invasive Species</span>
+                    <span className="text-red-400 font-semibold">{timelineData[timelineYear].invasive}</span>
+                  </div>
+                  <div className="bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-red-500 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${(timelineData[timelineYear].invasive / 30) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+    
+                <div className="pt-4 border-t border-gray-700">
+  <div className="text-sm text-gray-400 mb-2">Diversity Trend</div>
+  <div className="h-32">
+    <div className="flex items-end gap-3 h-24">
+      {[2023, 2024, 2025].map(year => {
+        const height = (timelineData[year].diversity / 3.5) * 100;
+        
+        return (
+          <div key={year} className="flex-1 flex flex-col items-center h-full justify-end">
+            <div
+              className={`w-full rounded-t transition-all duration-500 ${
+                year === timelineYear ? 'bg-gray-500' : 'bg-gray-700'
+              }`}
+              style={{ height: `${height}%` }}
+            ></div>
+          </div>
+        );
+      })}
     </div>
-  );
+    <div className="flex gap-3 mt-2">
+      {[2023, 2024, 2025].map(year => (
+        <div key={year} className="flex-1 text-center">
+          <span className="text-xs text-gray-500">{year}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+    
+                {timelineYear === 2025 && (
+                  <div className="bg-red-900 bg-opacity-20 border border-red-800 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertTriangle className="w-4 h-4 text-red-400" />
+                      <div className="text-xs font-semibold text-red-400">Alert: Invasive Species Detected</div>
+                    </div>
+                    <div className="text-xs text-gray-300">Significant increase in non-native taxa observed since 2023</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+    
+          
+        </div>
+      );
+    };
 
 
 
